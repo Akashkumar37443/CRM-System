@@ -265,7 +265,6 @@ export default function Deals() {
             </form>
           </div>
         </div>
-        </div>
       )}
       
       <WhatsAppLogModal
