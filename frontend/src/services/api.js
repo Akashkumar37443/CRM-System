@@ -74,15 +74,29 @@ export const tasksApi = {
   delete: (id) => api.delete(`/tasks/${id}`),
 };
 
-// Dashboard
+// Dashboard (Admin)
 export const dashboardApi = {
   get: () => api.get('/dashboard'),
+};
+
+// User Dashboard (Employee-scoped)
+export const userDashboardApi = {
+  get: () => api.get('/user-dashboard'),
 };
 
 // Activities
 export const activitiesApi = {
   getRecent: (count = 20) => api.get('/activities', { params: { count } }),
   getByEntity: (entityType, entityId) => api.get(`/activities/${entityType}/${entityId}`),
+};
+
+// Users (Admin management)
+export const usersApi = {
+  getAll: () => api.get('/users'),
+  getMe: () => api.get('/users/me'),
+  updateRole: (id, role) => api.put(`/users/${id}/role`, { role }),
+  updateStatus: (id, isActive) => api.put(`/users/${id}/status`, { isActive }),
+  delete: (id) => api.delete(`/users/${id}`),
 };
 
 export default api;
