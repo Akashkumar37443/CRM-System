@@ -1,0 +1,132 @@
+using System.Security.Claims;
+using CRM.Core.DTOs;
+using CRM.Core.Entities;
+using CRM.Core.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace CRM.API.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+[Authorize]
+public class ContactsController : ControllerBase
+{
+    private readonly IContactRepository _contactRepo;
+    private readonly IActivityRepository _activityRepo;
+
+    public ContactsController(IContactRepository contactRepo, IActivityRepository activityRepo)
+    {
+        _contactRepo = contactRepo;
+        _activityRepo = activityRepo;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<ContactDto>>> GetAll([FromQuery] string? search)
+    {
+        var contacts = string.IsNullOrEmpty(search)
+            ? await _contactRepo.GetAllAsync()
+            : await _contactRepo.SearchAsync(search);
+
+        return Ok(contacts.Select(MapToDto));
+    }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<ContactDto>> GetById(int id)
+    {
+        var contact = await _contactRepo.GetByIdAsync(id);
+        if (contact == null) return NotFound();
+        return Ok(MapToDto(contact));
+    }
+
+    [HttpGet("company/{companyId}")]
+    public async Task<ActionResult<IEnumerable<ContactDto>>> GetByCompany(int companyId)
+    {
+        var contacts = await _contactRepo.GetByCompanyAsync(companyId);
+        return Ok(contacts.Select(MapToDto));
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<ContactDto>> Create([FromBody] CreateContactDto dto)
+    {
+        var userId = GetCurrentUserId();
+        var contact = new Contact
+        {
+            FirstName = dto.FirstName,
+            LastName = dto.LastName,
+            Email = dto.Email,
+            Phone = dto.Phone,
+            JobTitle = dto.JobTitle,
+            Avatar = dto.Avatar,
+            Status = dto.Status ?? "Active",
+            Notes = dto.Notes,
+            Address = dto.Address,
+            City = dto.City,
+            Country = dto.Country,
+            CompanyId = dto.CompanyId,
+            OwnerId = userId
+        };
+
+        await _contactRepo.AddAsync(contact);
+
+        await _activityRepo.AddAsync(new Activity
+        {
+            Type = "Created",
+            Description = $"Created contact: {contact.FirstName} {contact.LastName}",
+            EntityType = "Contact",
+            EntityId = contact.Id,
+            UserId = userId,
+            ContactId = contact.Id
+        });
+
+        var created = await _contactRepo.GetByIdAsync(contact.Id);
+        return CreatedAtAction(nameof(GetById), new { id = contact.Id }, MapToDto(created!));
+    }
+
+    [HttpPut("{id}")]
+    public async Task<ActionResult<ContactDto>> Update(int id, [FromBody] UpdateContactDto dto)
+    {
+        var contact = await _contactRepo.GetByIdAsync(id);
+        if (contact == null) return NotFound();
+
+        if (dto.FirstName != null) contact.FirstName = dto.FirstName;
+        if (dto.LastName != null) contact.LastName = dto.LastName;
+        if (dto.Email != null) contact.Email = dto.Email;
+        if (dto.Phone != null) contact.Phone = dto.Phone;
+        if (dto.JobTitle != null) contact.JobTitle = dto.JobTitle;
+        if (dto.Avatar != null) contact.Avatar = dto.Avatar;
+        if (dto.Status != null) contact.Status = dto.Status;
+        if (dto.Notes != null) contact.Notes = dto.Notes;
+        if (dto.Address != null) contact.Address = dto.Address;
+        if (dto.City != null) contact.City = dto.City;
+        if (dto.Country != null) contact.Country = dto.Country;
+        if (dto.CompanyId.HasValue) contact.CompanyId = dto.CompanyId;
+
+        await _contactRepo.UpdateAsync(contact);
+
+        var updated = await _contactRepo.GetByIdAsync(id);
+        return Ok(MapToDto(updated!));
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> Delete(int id)
+    {
+        var contact = await _contactRepo.GetByIdAsync(id);
+        if (contact == null) return NotFound();
+        await _contactRepo.DeleteAsync(id);
+        return NoContent();
+    }
+
+    private int GetCurrentUserId()
+    {
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+        return claim != null ? int.Parse(claim.Value) : 1;
+    }
+
+    private static ContactDto MapToDto(Contact c) => new(
+        c.Id, c.FirstName, c.LastName, c.Email, c.Phone,
+        c.JobTitle, c.Avatar, c.Status, c.Notes,
+        c.Address, c.City, c.Country,
+        c.CreatedAt, c.LastContactedAt,
+        c.CompanyId, c.Company?.Name, c.OwnerId, c.Owner?.FullName);
+}
