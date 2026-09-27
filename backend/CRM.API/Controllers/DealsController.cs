@@ -110,6 +110,42 @@ public class DealsController : ControllerBase
         return NoContent();
     }
 
+    [HttpGet("{id}/health")]
+    public async Task<ActionResult<DealHealthDto>> GetDealHealth(int id)
+    {
+        var deal = await _dealRepo.GetByIdAsync(id);
+        if (deal == null) return NotFound();
+
+        var activities = await _activityRepo.GetByEntityAsync("Deal", id);
+        var lastActivity = activities.OrderByDescending(a => a.CreatedAt).FirstOrDefault();
+        var lastActivityDate = lastActivity?.CreatedAt;
+
+        // Also check task overdues. Need tasks for this deal.
+        var dealWithTasks = (await _dealRepo.GetActiveDealsWithDetailsAsync()).FirstOrDefault(d => d.Id == id);
+        int overdueTasks = dealWithTasks?.Tasks.Count(t => t.Status != "Completed" && t.DueDate < DateTime.UtcNow) ?? 0;
+
+        var health = CRM.API.Services.DealHealthService.ComputeHealth(deal, lastActivityDate, overdueTasks);
+        return Ok(health);
+    }
+
+    [HttpGet("health-report")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<IEnumerable<DealHealthDto>>> GetHealthReport()
+    {
+        var activeDeals = await _dealRepo.GetActiveDealsWithDetailsAsync();
+        var results = new List<DealHealthDto>();
+
+        foreach (var deal in activeDeals)
+        {
+            var lastActivity = deal.Activities.OrderByDescending(a => a.CreatedAt).FirstOrDefault();
+            int overdueTasks = deal.Tasks.Count(t => t.Status != "Completed" && t.DueDate < DateTime.UtcNow);
+            var health = CRM.API.Services.DealHealthService.ComputeHealth(deal, lastActivity?.CreatedAt, overdueTasks);
+            results.Add(health);
+        }
+
+        return Ok(results.OrderBy(h => h.HealthScore).ThenByDescending(h => h.Value).ToList());
+    }
+
     private int GetCurrentUserId()
     {
         var claim = User.FindFirst(ClaimTypes.NameIdentifier);

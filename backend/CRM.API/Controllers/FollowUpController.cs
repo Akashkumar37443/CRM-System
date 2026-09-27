@@ -81,7 +81,7 @@ public class FollowUpController : ControllerBase
                 c.Id,
                 $"{c.FirstName} {c.LastName}",
                 c.JobTitle,
-                c.CompanyName,
+                c.Company?.Name,
                 primaryDeal?.Id,
                 primaryDeal?.Title,
                 primaryDeal?.Value ?? 0,
