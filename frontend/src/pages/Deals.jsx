@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { dealsApi, contactsApi, companiesApi } from '../services/api';
-import { Plus, DollarSign, Calendar, User, X, TrendingUp } from 'lucide-react';
+import { Plus, DollarSign, Calendar, User, X, TrendingUp, MessageCircle } from 'lucide-react';
+import WhatsAppLogModal from '../components/WhatsAppLogModal';
+import DealHealthBadge from '../components/DealHealthBadge';
 
 const STAGES = ['Lead', 'Qualified', 'Proposal', 'Negotiation', 'Closed Won', 'Closed Lost'];
 const STAGE_COLORS = {
@@ -16,8 +18,10 @@ export default function Deals() {
   const [deals, setDeals] = useState([]);
   const [contacts, setContacts] = useState([]);
   const [companies, setCompanies] = useState([]);
+  const [healthMap, setHealthMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [whatsappTarget, setWhatsappTarget] = useState(null);
   const [form, setForm] = useState({
     title: '', value: '', stage: 'Lead', probability: 10,
     description: '', priority: 'Medium', expectedCloseDate: '',
@@ -34,6 +38,12 @@ export default function Deals() {
       setDeals(dealsRes.data);
       setContacts(contactsRes.data);
       setCompanies(companiesRes.data);
+      // Load health report (non-blocking)
+      dealsApi.getHealthReport().then(hr => {
+        const map = {};
+        hr.data.forEach(h => { map[h.dealId] = h; });
+        setHealthMap(map);
+      }).catch(() => {});
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
@@ -114,13 +124,22 @@ export default function Deals() {
                     <div key={deal.id} className="pipeline-card">
                       <div className="pipeline-card-title">{deal.title}</div>
                       <div className="pipeline-card-value">{formatCurrency(deal.value)}</div>
-                      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
                         <span className={`badge ${deal.priority === 'High' ? 'badge-danger' : deal.priority === 'Medium' ? 'badge-warning' : 'badge-default'}`} style={{ fontSize: '0.625rem' }}>
                           {deal.priority}
                         </span>
                         <span className="badge badge-info" style={{ fontSize: '0.625rem' }}>
                           {deal.probability}% likely
                         </span>
+                        {healthMap[deal.id] && (
+                          <DealHealthBadge
+                            score={healthMap[deal.id].healthScore}
+                            label={healthMap[deal.id].healthLabel}
+                            topRisk={healthMap[deal.id].topRisk}
+                            daysSinceActivity={healthMap[deal.id].daysSinceActivity}
+                            overdueTaskCount={healthMap[deal.id].overdueTaskCount}
+                          />
+                        )}
                       </div>
                       <div className="pipeline-card-meta">
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>

@@ -32,6 +32,7 @@ public interface IDealRepository : IRepository<Deal>
     Task<int> GetCountAsync();
     Task<decimal> GetTotalRevenueAsync();
     Task<decimal> GetPipelineValueAsync();
+    Task<IEnumerable<Deal>> GetActiveDealsWithDetailsAsync();
 }
 
 public interface ICrmTaskRepository : IRepository<CrmTask>

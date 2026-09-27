@@ -135,6 +135,14 @@ public class DealRepository : Repository<Deal>, IDealRepository
     public async Task<decimal> GetPipelineValueAsync()
         => await _dbSet.Where(d => d.Stage != "Closed Won" && d.Stage != "Closed Lost")
             .SumAsync(d => d.Value);
+
+    public async Task<IEnumerable<Deal>> GetActiveDealsWithDetailsAsync()
+        => await _dbSet
+            .Include(d => d.Owner)
+            .Include(d => d.Tasks)
+            .Include(d => d.Activities)
+            .Where(d => d.Stage != "Closed Won" && d.Stage != "Closed Lost")
+            .ToListAsync();
 }
 
 // ============ CrmTask Repository ============

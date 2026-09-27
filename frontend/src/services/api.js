@@ -61,6 +61,8 @@ export const dealsApi = {
   create: (data) => api.post('/deals', data),
   update: (id, data) => api.put(`/deals/${id}`, data),
   delete: (id) => api.delete(`/deals/${id}`),
+  getHealth: (id) => api.get(`/deals/${id}/health`),
+  getHealthReport: () => api.get('/deals/health-report'),
 };
 
 // Tasks

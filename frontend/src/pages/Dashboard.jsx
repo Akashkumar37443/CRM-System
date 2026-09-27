@@ -10,6 +10,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
+import DealsAtRiskPanel from '../components/DealsAtRiskPanel';
 
 const STAGE_COLORS = {
   'Lead': '#f59e0b',
@@ -125,6 +126,11 @@ export default function Dashboard() {
       </div>
 
       <div className="page-content">
+        {/* ROW 0: Deals at Risk Panel */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <DealsAtRiskPanel />
+        </div>
+
         {/* ROW 1: Revenue Analytics & Deals by Stage */}
         <div className="charts-grid-top">
           {/* Revenue Analytics */}

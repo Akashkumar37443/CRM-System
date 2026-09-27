@@ -94,3 +94,17 @@ public record DashboardDto(
 
 public record DealsByStageDto(string Stage, int Count, decimal TotalValue);
 public record RevenueByMonthDto(string Month, decimal Revenue);
+
+public record DealHealthDto(
+    int DealId,
+    string DealTitle,
+    decimal Value,
+    string Stage,
+    string OwnerName,
+    int HealthScore,
+    string HealthLabel,
+    int DaysSinceActivity,
+    int DaysInCurrentStage,
+    int OverdueTaskCount,
+    string? TopRisk
+);
