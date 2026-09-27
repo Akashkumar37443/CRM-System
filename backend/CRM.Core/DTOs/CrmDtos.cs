@@ -81,7 +81,17 @@ public record UpdateCrmTaskDto(
 // ============ Activity DTOs ============
 public record ActivityDto(
     int Id, string Type, string Description, string EntityType,
-    int EntityId, DateTime CreatedAt, int UserId, string? UserName);
+    int EntityId, DateTime CreatedAt, int UserId, string? UserName,
+    string? Outcome = null, string? Channel = null);
+
+public record LogWhatsAppDto(
+    string Summary,       // The conversation summary text
+    string Outcome,       // Positive | Neutral | Objection | NoResponse
+    string? Template,     // Optional: quick-fill template used
+    int? ContactId,
+    int? DealId,
+    DateTime? OccurredAt  // Defaults to now if null
+);
 
 // ============ Dashboard DTOs ============
 public record DashboardDto(

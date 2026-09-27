@@ -84,6 +84,11 @@ export const userDashboardApi = {
   get: () => api.get('/user-dashboard'),
 };
 
+// WhatsApp (Quick-Log)
+export const whatsappApi = {
+  log: (data) => api.post('/whatsapp/log', data),
+};
+
 // Follow-Up (Smart Nudge)
 export const followUpApi = {
   getToday: () => api.get('/followup/today'),
