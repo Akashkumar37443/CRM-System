@@ -84,6 +84,11 @@ export const userDashboardApi = {
   get: () => api.get('/user-dashboard'),
 };
 
+// Follow-Up (Smart Nudge)
+export const followUpApi = {
+  getToday: () => api.get('/followup/today'),
+};
+
 // Activities
 export const activitiesApi = {
   getRecent: (count = 20) => api.get('/activities', { params: { count } }),
