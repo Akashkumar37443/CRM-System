@@ -157,6 +157,15 @@ export default function Deals() {
                           {deal.companyName && <span> • {deal.companyName}</span>}
                         </div>
                       )}
+                      
+                      <button onClick={() => setWhatsappTarget(deal)} style={{
+                        marginTop: '0.5rem', width: '100%', padding: '0.25rem', background: '#f0fdf4', color: '#16a34a',
+                        border: '1px solid #bbf7d0', borderRadius: '4px', fontSize: '0.625rem', fontWeight: 600,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', cursor: 'pointer'
+                      }}>
+                        <MessageCircle size={10} /> Log Chat
+                      </button>
+
                       {stage !== 'Closed Won' && stage !== 'Closed Lost' && (
                         <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.25rem' }}>
                           {STAGES.filter(s => s !== stage && s !== 'Closed Lost').slice(0, 3).map(s => (
@@ -256,7 +265,17 @@ export default function Deals() {
             </form>
           </div>
         </div>
+        </div>
       )}
+      
+      <WhatsAppLogModal
+        isOpen={!!whatsappTarget}
+        onClose={() => setWhatsappTarget(null)}
+        dealId={whatsappTarget?.id}
+        contactId={whatsappTarget?.contactId}
+        contactName={whatsappTarget?.contactName}
+        onSaved={loadData}
+      />
     </>
   );
 }

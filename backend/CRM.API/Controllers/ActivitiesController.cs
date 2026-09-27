@@ -23,7 +23,8 @@ public class ActivitiesController : ControllerBase
         var activities = await _activityRepo.GetRecentAsync(count);
         return Ok(activities.Select(a => new ActivityDto(
             a.Id, a.Type, a.Description, a.EntityType,
-            a.EntityId, a.CreatedAt, a.UserId, a.User?.FullName)));
+            a.EntityId, a.CreatedAt, a.UserId, a.User?.FullName,
+            a.Outcome, a.Channel)));
     }
 
     [HttpGet("{entityType}/{entityId}")]
@@ -32,6 +33,7 @@ public class ActivitiesController : ControllerBase
         var activities = await _activityRepo.GetByEntityAsync(entityType, entityId);
         return Ok(activities.Select(a => new ActivityDto(
             a.Id, a.Type, a.Description, a.EntityType,
-            a.EntityId, a.CreatedAt, a.UserId, a.User?.FullName)));
+            a.EntityId, a.CreatedAt, a.UserId, a.User?.FullName,
+            a.Outcome, a.Channel)));
     }
 }

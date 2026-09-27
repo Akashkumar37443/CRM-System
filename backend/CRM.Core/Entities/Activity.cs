@@ -8,6 +8,8 @@ public class Activity
     public string EntityType { get; set; } = string.Empty; // Contact, Company, Deal, Task
     public int EntityId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public string? Outcome { get; set; }
+    public string? Channel { get; set; }
 
     // Foreign keys
     public int UserId { get; set; }

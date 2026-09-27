@@ -46,6 +46,7 @@ public interface IActivityRepository : IRepository<Activity>
 {
     Task<IEnumerable<Activity>> GetRecentAsync(int count = 20);
     Task<IEnumerable<Activity>> GetByEntityAsync(string entityType, int entityId);
+    Task<DateTime?> GetLastContactDateAsync(int contactId);
 }
 
 public interface IUserRepository : IRepository<User>
