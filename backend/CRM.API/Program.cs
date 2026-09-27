@@ -9,8 +9,18 @@ using Microsoft.IdentityModel.Tokens;
 var builder = WebApplication.CreateBuilder(args);
 
 // ============ Database ============
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<CrmDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    if (string.IsNullOrEmpty(connectionString) || connectionString.Contains(".db") || connectionString.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
+    {
+        options.UseSqlite(connectionString ?? "Data Source=crm.db");
+    }
+    else
+    {
+        options.UseSqlServer(connectionString);
+    }
+});
 
 // ============ Repositories ============
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -47,9 +57,9 @@ builder.Services.AddControllers();
 // ============ CORS ============
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowReactApp", policy =>
+    options.AddPolicy("AllowAll", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
+        policy.SetIsOriginAllowed(_ => true)
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
@@ -59,14 +69,21 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // ============ Apply Migrations & Seed on startup ============
-using (var scope = app.Services.CreateScope())
+try
 {
-    var db = scope.ServiceProvider.GetRequiredService<CrmDbContext>();
-    db.Database.EnsureCreated();
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<CrmDbContext>();
+        db.Database.EnsureCreated();
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Database initialization error: {ex.Message}");
 }
 
 // ============ Middleware Pipeline ============
-app.UseCors("AllowReactApp");
+app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
