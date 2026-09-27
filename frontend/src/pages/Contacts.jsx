@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { contactsApi, companiesApi } from '../services/api';
-import { Search, Plus, Mail, Phone, Building2, Edit2, Trash2, X, User } from 'lucide-react';
+import { Search, Plus, Mail, Phone, Building2, Edit2, Trash2, X, User, MessageCircle } from 'lucide-react';
+import WhatsAppLogModal from '../components/WhatsAppLogModal';
 
 const STATUS_BADGES = {
   Active: 'badge-success',
@@ -25,6 +26,7 @@ export default function Contacts() {
     jobTitle: '', status: 'Active', companyId: '', notes: '',
     address: '', city: '', country: ''
   });
+  const [whatsappTarget, setWhatsappTarget] = useState(null);
 
   useEffect(() => { loadData(); }, []);
 
@@ -169,9 +171,12 @@ export default function Contacts() {
                     </div>
                   </td>
                   <td>
-                    <div style={{ display: 'flex', gap: '0.375rem' }}>
-                      <button className="btn-icon" onClick={() => openEdit(c)}><Edit2 size={14} /></button>
-                      <button className="btn-icon" onClick={() => handleDelete(c.id)} style={{ color: '#ef4444' }}><Trash2 size={14} /></button>
+                    <div style={{ display: 'flex', gap: '0.375rem', alignItems: 'center' }}>
+                      <button className="btn-icon" onClick={() => setWhatsappTarget(c)} title="Log WhatsApp Chat" style={{ color: '#16a34a' }}>
+                        <MessageCircle size={14} />
+                      </button>
+                      <button className="btn-icon" onClick={() => openEdit(c)} title="Edit"><Edit2 size={14} /></button>
+                      <button className="btn-icon" onClick={() => handleDelete(c.id)} title="Delete" style={{ color: '#ef4444' }}><Trash2 size={14} /></button>
                     </div>
                   </td>
                 </tr>
@@ -256,6 +261,14 @@ export default function Contacts() {
           </div>
         </div>
       )}
+
+      <WhatsAppLogModal
+        isOpen={!!whatsappTarget}
+        onClose={() => setWhatsappTarget(null)}
+        contactId={whatsappTarget?.id}
+        contactName={`${whatsappTarget?.firstName} ${whatsappTarget?.lastName}`}
+        onSaved={loadData}
+      />
     </>
   );
 }
