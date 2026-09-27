@@ -10,17 +10,28 @@ var builder = WebApplication.CreateBuilder(args);
 
 // ============ Database ============
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<CrmDbContext>(options =>
+var isRailway = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("RAILWAY_ENVIRONMENT"))
+             || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("RAILWAY_PROJECT_ID"));
+var useSqlite = string.IsNullOrEmpty(connectionString) || isRailway
+             || connectionString.Contains(".db") 
+             || connectionString.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase);
+
+if (useSqlite)
 {
-    if (string.IsNullOrEmpty(connectionString) || connectionString.Contains(".db") || connectionString.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
-    {
-        options.UseSqlite(connectionString ?? "Data Source=crm.db");
-    }
-    else
-    {
-        options.UseSqlServer(connectionString);
-    }
-});
+    var sqlitePath = isRailway ? "/app/data/crm.db" : "crm.db";
+    var dir = Path.GetDirectoryName(sqlitePath);
+    if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+        Directory.CreateDirectory(dir);
+    
+    var finalConnStr = $"Data Source={sqlitePath}";
+    Console.WriteLine($"Using SQLite: {finalConnStr}");
+    builder.Services.AddDbContext<CrmDbContext>(options => options.UseSqlite(finalConnStr));
+}
+else
+{
+    Console.WriteLine("Using SQL Server");
+    builder.Services.AddDbContext<CrmDbContext>(options => options.UseSqlServer(connectionString));
+}
 
 // ============ Repositories ============
 builder.Services.AddScoped<IUserRepository, UserRepository>();
