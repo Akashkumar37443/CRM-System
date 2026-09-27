@@ -11,6 +11,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
+import FollowUpWidget from '../components/FollowUpWidget';
 
 const STAGE_COLORS = {
   'Lead': '#f59e0b',
@@ -351,8 +352,11 @@ export default function UserDashboard() {
         ))}
       </div>
 
-      {/* ── Main Grid: Tasks + Deals + Chart ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+      {/* ── Main Grid: Follow-Ups + Tasks + Deals + Chart ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+        
+        {/* Smart Follow-Up Nudge */}
+        <FollowUpWidget />
 
         {/* My Tasks */}
         <div style={cardStyle}>

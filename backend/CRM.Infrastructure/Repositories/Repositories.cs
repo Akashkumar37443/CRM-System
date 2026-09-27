@@ -179,4 +179,11 @@ public class ActivityRepository : Repository<Activity>, IActivityRepository
         => await _dbSet.Include(a => a.User)
             .Where(a => a.EntityType == entityType && a.EntityId == entityId)
             .OrderByDescending(a => a.CreatedAt).ToListAsync();
+
+    public async Task<DateTime?> GetLastContactDateAsync(int contactId)
+        => await _dbSet
+            .Where(a => a.ContactId == contactId)
+            .OrderByDescending(a => a.CreatedAt)
+            .Select(a => (DateTime?)a.CreatedAt)
+            .FirstOrDefaultAsync();
 }

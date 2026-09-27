@@ -104,3 +104,19 @@ public record DashboardDto(
 
 public record DealsByStageDto(string Stage, int Count, decimal TotalValue);
 public record RevenueByMonthDto(string Month, decimal Revenue);
+
+public record FollowUpItemDto(
+    int ContactId,
+    string ContactName,
+    string? JobTitle,
+    string? CompanyName,
+    int? ActiveDealId,
+    string? ActiveDealTitle,
+    decimal ActiveDealValue,
+    string ActiveDealStage,
+    int DaysSinceContact,
+    bool HasOverdueTask,
+    string? OverdueTaskTitle,
+    int UrgencyScore,
+    string Priority
+);
