@@ -14,11 +14,13 @@ public class ContactsController : ControllerBase
 {
     private readonly IContactRepository _contactRepo;
     private readonly IActivityRepository _activityRepo;
+    private readonly IEmailService _emailService;
 
-    public ContactsController(IContactRepository contactRepo, IActivityRepository activityRepo)
+    public ContactsController(IContactRepository contactRepo, IActivityRepository activityRepo, IEmailService emailService)
     {
         _contactRepo = contactRepo;
         _activityRepo = activityRepo;
+        _emailService = emailService;
     }
 
     [HttpGet]
@@ -132,6 +134,36 @@ public class ContactsController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("{id}/send-email")]
+    public async Task<IActionResult> SendEmail(int id, [FromBody] SendEmailDto dto)
+    {
+        var contact = await _contactRepo.GetByIdAsync(id);
+        if (contact == null) return NotFound();
+
+        var senderName = User.FindFirst(ClaimTypes.Name)?.Value ?? "Your Account Manager";
+
+        try
+        {
+            var emailHtml = CRM.Core.Helpers.EmailTemplateBuilder.BuildClientReminderEmail(contact.FirstName, senderName, dto.Message);
+            await _emailService.SendEmailAsync(contact.Email, dto.Subject, emailHtml);
+            
+            // Log it as an activity
+            await _activityRepo.AddAsync(new Activity
+            {
+                Type = "Email",
+                Description = $"Sent email: {dto.Subject}",
+                ContactId = id,
+                UserId = GetCurrentUserId()
+            });
+
+            return Ok(new { message = "Email sent successfully" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "Failed to send email", details = ex.Message });
+        }
+    }
+
     private int GetCurrentUserId()
     {
         var claim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -145,3 +177,5 @@ public class ContactsController : ControllerBase
         c.CreatedAt, c.LastContactedAt,
         c.CompanyId, c.Company?.Name, c.OwnerId, c.Owner?.FullName);
 }
+
+public record SendEmailDto(string Subject, string Message);
