@@ -24,9 +24,19 @@ public class ContactsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ContactDto>>> GetAll([FromQuery] string? search)
     {
-        var contacts = string.IsNullOrEmpty(search)
-            ? await _contactRepo.GetAllAsync()
-            : await _contactRepo.SearchAsync(search);
+        var role = User.FindFirst(ClaimTypes.Role)?.Value ?? "User";
+        var userId = GetCurrentUserId();
+        bool isPrivileged = role == "Admin" || role == "Manager";
+
+        IEnumerable<Contact> contacts;
+        if (string.IsNullOrEmpty(search))
+            contacts = isPrivileged ? await _contactRepo.GetAllAsync() : await _contactRepo.GetByOwnerAsync(userId);
+        else
+            contacts = await _contactRepo.SearchAsync(search);
+
+        // Non-privileged: filter search results to own contacts only
+        if (!isPrivileged && !string.IsNullOrEmpty(search))
+            contacts = contacts.Where(c => c.OwnerId == userId);
 
         return Ok(contacts.Select(MapToDto));
     }
@@ -111,8 +121,13 @@ public class ContactsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(int id)
     {
+        var role = User.FindFirst(ClaimTypes.Role)?.Value ?? "User";
+        var userId = GetCurrentUserId();
         var contact = await _contactRepo.GetByIdAsync(id);
         if (contact == null) return NotFound();
+        // Users can only delete their own contacts
+        if (role == "User" && contact.OwnerId != userId)
+            return Forbid();
         await _contactRepo.DeleteAsync(id);
         return NoContent();
     }

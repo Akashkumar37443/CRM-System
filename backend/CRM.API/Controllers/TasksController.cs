@@ -22,7 +22,11 @@ public class TasksController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<CrmTaskDto>>> GetAll()
     {
-        var tasks = await _taskRepo.GetAllAsync();
+        var role = User.FindFirst(ClaimTypes.Role)?.Value ?? "User";
+        var userId = GetCurrentUserId();
+        bool isPrivileged = role == "Admin" || role == "Manager";
+
+        var tasks = isPrivileged ? await _taskRepo.GetAllAsync() : await _taskRepo.GetByAssigneeAsync(userId);
         return Ok(tasks.Select(MapToDto));
     }
 
@@ -94,8 +98,14 @@ public class TasksController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(int id)
     {
+        var role = User.FindFirst(ClaimTypes.Role)?.Value ?? "User";
+        var userId = GetCurrentUserId();
         var task = await _taskRepo.GetByIdAsync(id);
         if (task == null) return NotFound();
+        
+        if (role == "User" && task.AssigneeId != userId)
+            return Forbid();
+
         await _taskRepo.DeleteAsync(id);
         return NoContent();
     }

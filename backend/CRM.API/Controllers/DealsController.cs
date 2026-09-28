@@ -24,9 +24,19 @@ public class DealsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<DealDto>>> GetAll([FromQuery] string? stage)
     {
-        var deals = string.IsNullOrEmpty(stage)
-            ? await _dealRepo.GetAllAsync()
-            : await _dealRepo.GetByStageAsync(stage);
+        var role = User.FindFirst(ClaimTypes.Role)?.Value ?? "User";
+        var userId = GetCurrentUserId();
+        bool isPrivileged = role == "Admin" || role == "Manager";
+
+        IEnumerable<Deal> deals;
+        if (isPrivileged)
+            deals = string.IsNullOrEmpty(stage) ? await _dealRepo.GetAllAsync() : await _dealRepo.GetByStageAsync(stage);
+        else
+        {
+            deals = await _dealRepo.GetByOwnerAsync(userId);
+            if (!string.IsNullOrEmpty(stage))
+                deals = deals.Where(d => d.Stage == stage);
+        }
 
         return Ok(deals.Select(MapToDto));
     }
@@ -104,8 +114,14 @@ public class DealsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(int id)
     {
+        var role = User.FindFirst(ClaimTypes.Role)?.Value ?? "User";
+        var userId = GetCurrentUserId();
         var deal = await _dealRepo.GetByIdAsync(id);
         if (deal == null) return NotFound();
+        
+        if (role == "User" && deal.OwnerId != userId)
+            return Forbid();
+
         await _dealRepo.DeleteAsync(id);
         return NoContent();
     }
