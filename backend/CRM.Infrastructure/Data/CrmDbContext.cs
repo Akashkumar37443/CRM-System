@@ -1,11 +1,18 @@
 using CRM.Core.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace CRM.Infrastructure.Data;
 
 public class CrmDbContext : DbContext
 {
     public CrmDbContext(DbContextOptions<CrmDbContext> options) : base(options) { }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        optionsBuilder.ConfigureWarnings(w =>
+            w.Ignore(RelationalEventId.PendingModelChangesWarning));
+    }
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Contact> Contacts => Set<Contact>();
@@ -121,6 +128,11 @@ public class CrmDbContext : DbContext
             entity.HasOne(e => e.Contact)
                 .WithMany(c => c.Activities)
                 .HasForeignKey(e => e.ContactId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.Deal)
+                .WithMany(d => d.Activities)
+                .HasForeignKey(e => e.DealId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
 

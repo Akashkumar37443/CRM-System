@@ -36,9 +36,10 @@ public class WhatsAppController : ControllerBase
             Description = dto.Summary,
             Outcome = dto.Outcome,
             EntityType = dto.DealId != null ? "Deal" : "Contact",
-            EntityId = dto.DealId ?? dto.ContactId.Value,
+            EntityId = dto.DealId ?? dto.ContactId!.Value,
             UserId = userId,
-            ContactId = dto.ContactId, // can be null if only deal id provided, but standard is to try to link it
+            ContactId = dto.ContactId,
+            DealId = dto.DealId,
             CreatedAt = dto.OccurredAt ?? DateTime.UtcNow
         };
 

@@ -34,16 +34,34 @@ export default function WhatsAppLogModal({ isOpen, onClose, contactId, dealId, c
     if (t.label === 'Contract discussion') setOutcome('Positive');
   };
 
+  const [error, setError] = useState('');
+
   const handleSave = async () => {
     if (!summary.trim()) return;
     setSaving(true);
+    setError('');
     try {
+      // Ensure at least one of contactId or dealId is provided
+      const cId = contactId || null;
+      const dId = dealId || null;
+      if (!cId && !dId) {
+        setError('No contact or deal linked. Cannot log.');
+        setSaving(false);
+        return;
+      }
+      // Safe ISO date - handle both YYYY-MM-DD and other formats
+      let occurredAt = new Date().toISOString();
+      if (date) {
+        // date input always returns YYYY-MM-DD format from type="date"
+        const parsed = new Date(date + 'T00:00:00');
+        if (!isNaN(parsed.getTime())) occurredAt = parsed.toISOString();
+      }
       await whatsappApi.log({
         summary,
         outcome,
-        contactId,
-        dealId,
-        occurredAt: date ? new Date(date).toISOString() : new Date().toISOString()
+        contactId: cId,
+        dealId: dId,
+        occurredAt
       });
       setSummary('');
       setOutcome('Positive');
@@ -51,6 +69,7 @@ export default function WhatsAppLogModal({ isOpen, onClose, contactId, dealId, c
       onClose();
     } catch (err) {
       console.error('Failed to log whatsapp', err);
+      setError(err?.response?.data?.message || 'Failed to save. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -79,7 +98,7 @@ export default function WhatsAppLogModal({ isOpen, onClose, contactId, dealId, c
             <MessageCircle size={20} color="#22c55e" />
             Log WhatsApp Chat
           </h2>
-          <button onClick={onClose} style={{
+          <button onClick={() => { setError(''); onClose(); }} style={{
             background: 'none', border: 'none', cursor: 'pointer', color: '#64748b'
           }}><X size={20} /></button>
         </div>
@@ -152,19 +171,30 @@ export default function WhatsAppLogModal({ isOpen, onClose, contactId, dealId, c
         {/* Footer */}
         <div style={{
           padding: '1.25rem 1.5rem', borderTop: '1px solid #e2e8f0',
-          display: 'flex', justifyContent: 'flex-end', gap: 10, background: '#f8fafc'
+          background: '#f8fafc'
         }}>
-          <button onClick={onClose} style={{
-            padding: '0.625rem 1.25rem', background: '#fff', border: '1px solid #cbd5e1',
-            borderRadius: 8, cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, color: '#475569'
-          }}>Cancel</button>
-          <button onClick={handleSave} disabled={saving || !summary.trim()} style={{
-            padding: '0.625rem 1.25rem', background: '#22c55e', border: 'none',
-            borderRadius: 8, cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, color: '#fff',
-            display: 'flex', alignItems: 'center', gap: 6, opacity: (saving || !summary.trim()) ? 0.6 : 1
-          }}>
-            {saving ? 'Saving...' : <><Check size={16} /> Log Conversation</>}
-          </button>
+          {error && (
+            <div style={{
+              marginBottom: '0.75rem', padding: '0.625rem 0.875rem',
+              background: '#fee2e2', border: '1px solid #fecaca', borderRadius: 8,
+              color: '#dc2626', fontSize: '0.8rem', fontWeight: 600,
+            }}>
+              ⚠️ {error}
+            </div>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+            <button onClick={() => { setError(''); onClose(); }} style={{
+              padding: '0.625rem 1.25rem', background: '#fff', border: '1px solid #cbd5e1',
+              borderRadius: 8, cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, color: '#475569'
+            }}>Cancel</button>
+            <button onClick={handleSave} disabled={saving || !summary.trim()} style={{
+              padding: '0.625rem 1.25rem', background: '#22c55e', border: 'none',
+              borderRadius: 8, cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, color: '#fff',
+              display: 'flex', alignItems: 'center', gap: 6, opacity: (saving || !summary.trim()) ? 0.6 : 1
+            }}>
+              {saving ? 'Saving...' : <><Check size={16} /> Log Conversation</>}
+            </button>
+          </div>
         </div>
       </div>
     </div>

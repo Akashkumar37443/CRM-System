@@ -14,8 +14,10 @@ public class Activity
     // Foreign keys
     public int UserId { get; set; }
     public int? ContactId { get; set; }
+    public int? DealId { get; set; }
 
     // Navigation properties
     public User User { get; set; } = null!;
     public Contact? Contact { get; set; }
+    public Deal? Deal { get; set; }
 }
