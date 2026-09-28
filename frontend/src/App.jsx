@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { useEffect } from 'react';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -39,6 +40,13 @@ function HomePage() {
 }
 
 function App() {
+  useEffect(() => {
+    const theme = localStorage.getItem('crm_theme') || 'light';
+    document.body.classList.remove('theme-dark', 'theme-glass');
+    if (theme === 'dark') document.body.classList.add('theme-dark');
+    if (theme === 'glass') document.body.classList.add('theme-glass');
+  }, []);
+
   return (
     <AuthProvider>
       <Router>

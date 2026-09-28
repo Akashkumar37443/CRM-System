@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { User, Shield, Bell, Palette, Save, Check } from 'lucide-react';
 
@@ -6,6 +6,7 @@ export default function Settings() {
   const { user } = useAuth();
   const [tab, setTab] = useState('profile');
   const [saved, setSaved] = useState(false);
+  const [theme, setTheme] = useState(localStorage.getItem('crm_theme') || 'light');
 
   const [profile, setProfile] = useState({
     fullName: user?.fullName || '',
@@ -24,7 +25,25 @@ export default function Settings() {
     pushContacts: true,
   });
 
+  // Apply theme on component mount
+  useEffect(() => {
+    applyTheme(theme);
+  }, []);
+
+  const applyTheme = (newTheme) => {
+    document.body.classList.remove('theme-dark', 'theme-glass');
+    if (newTheme === 'dark') document.body.classList.add('theme-dark');
+    if (newTheme === 'glass') document.body.classList.add('theme-glass');
+    localStorage.setItem('crm_theme', newTheme);
+  };
+
+  const handleThemeChange = (newTheme) => {
+    setTheme(newTheme);
+    applyTheme(newTheme);
+  };
+
   const handleSave = () => {
+    // Faking API call to save settings
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -201,26 +220,26 @@ export default function Settings() {
                 <label className="form-label" style={{ marginBottom: '0.75rem' }}>Theme Mode</label>
                 <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                   {[
-                    { label: 'Glassmorphism', bg: 'linear-gradient(135deg, rgba(99, 102, 241, 0.6) 0%, rgba(168, 85, 247, 0.5) 50%, rgba(56, 189, 248, 0.4) 100%)', selected: true },
-                    { label: 'Deep Dark', bg: '#0b1120', selected: false },
-                    { label: 'Light Glass', bg: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)', selected: false },
-                  ].map(theme => (
-                    <div key={theme.label} style={{
+                    { id: 'glass', label: 'Glassmorphism', bg: 'linear-gradient(135deg, rgba(99, 102, 241, 0.6) 0%, rgba(168, 85, 247, 0.5) 50%, rgba(56, 189, 248, 0.4) 100%)' },
+                    { id: 'dark', label: 'Deep Dark', bg: '#0b1120' },
+                    { id: 'light', label: 'Light Glass', bg: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)' },
+                  ].map(t => (
+                    <div key={t.id} onClick={() => handleThemeChange(t.id)} style={{
                       padding: '1rem', borderRadius: '12px', cursor: 'pointer',
-                      border: `2px solid ${theme.selected ? 'rgba(168, 85, 247, 0.7)' : 'rgba(255, 255, 255, 0.12)'}`,
-                      background: theme.selected ? 'rgba(99, 102, 241, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                      border: `2px solid ${theme === t.id ? 'rgba(168, 85, 247, 0.7)' : 'rgba(255, 255, 255, 0.12)'}`,
+                      background: theme === t.id ? 'rgba(99, 102, 241, 0.15)' : 'rgba(255, 255, 255, 0.05)',
                       backdropFilter: 'blur(12px)',
                       textAlign: 'center', minWidth: 120,
-                      boxShadow: theme.selected ? '0 8px 24px rgba(99, 102, 241, 0.3)' : 'none',
+                      boxShadow: theme === t.id ? '0 8px 24px rgba(99, 102, 241, 0.3)' : 'none',
                       transition: 'all 0.2s ease'
                     }}>
                       <div style={{
                         width: 52, height: 34, borderRadius: 8, margin: '0 auto 0.5rem',
-                        background: theme.bg, border: '1px solid rgba(255, 255, 255, 0.2)',
+                        background: t.bg, border: '1px solid rgba(255, 255, 255, 0.2)',
                         boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.3)'
                       }} />
-                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: theme.selected ? '#ffffff' : '#94a3b8' }}>
-                        {theme.label}
+                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: theme === t.id ? '#3b82f6' : '#94a3b8' }}>
+                        {t.label}
                       </span>
                     </div>
                   ))}
@@ -249,3 +268,4 @@ export default function Settings() {
     </>
   );
 }
+
