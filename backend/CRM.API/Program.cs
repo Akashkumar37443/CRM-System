@@ -2,6 +2,7 @@ using System.Text;
 using CRM.Core.Interfaces;
 using CRM.Infrastructure.Data;
 using CRM.Infrastructure.Repositories;
+using CRM.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -40,6 +41,7 @@ builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();
 builder.Services.AddScoped<IDealRepository, DealRepository>();
 builder.Services.AddScoped<ICrmTaskRepository, CrmTaskRepository>();
 builder.Services.AddScoped<IActivityRepository, ActivityRepository>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 // ============ JWT Authentication ============
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "CrmSystemSuperSecretKey2024!@#$%^&*()VeryLong";
