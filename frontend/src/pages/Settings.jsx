@@ -220,8 +220,6 @@ export default function Settings() {
                 <label className="form-label" style={{ marginBottom: '0.75rem' }}>Theme Mode</label>
                 <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                   {[
-                    { id: 'glass', label: 'Glassmorphism', bg: 'linear-gradient(135deg, rgba(99, 102, 241, 0.6) 0%, rgba(168, 85, 247, 0.5) 50%, rgba(56, 189, 248, 0.4) 100%)' },
-                    { id: 'dark', label: 'Deep Dark', bg: '#0b1120' },
                     { id: 'light', label: 'Light Glass', bg: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)' },
                   ].map(t => (
                     <div key={t.id} onClick={() => handleThemeChange(t.id)} style={{
