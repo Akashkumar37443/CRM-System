@@ -129,7 +129,7 @@ public class DealsController : ControllerBase
     }
 
     [HttpGet("health-report")]
-    [Authorize(Roles = "Admin,Manager")]
+    [Authorize]
     public async Task<ActionResult<IEnumerable<DealHealthDto>>> GetHealthReport()
     {
         var activeDeals = await _dealRepo.GetActiveDealsWithDetailsAsync();

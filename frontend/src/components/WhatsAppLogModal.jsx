@@ -23,8 +23,7 @@ export default function WhatsAppLogModal({ isOpen, onClose, contactId, dealId, c
   const [outcome, setOutcome] = useState('Positive');
   const [saving, setSaving] = useState(false);
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-
-  if (!isOpen) return null;
+  const [error, setError] = useState('');
 
   const handleTemplateClick = (t) => {
     let txt = t.template.replace('{name}', contactName || 'client');
@@ -34,7 +33,7 @@ export default function WhatsAppLogModal({ isOpen, onClose, contactId, dealId, c
     if (t.label === 'Contract discussion') setOutcome('Positive');
   };
 
-  const [error, setError] = useState('');
+  if (!isOpen) return null;
 
   const handleSave = async () => {
     if (!summary.trim()) return;
