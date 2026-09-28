@@ -1,4 +1,5 @@
-import { Outlet, NavLink, useLocation } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { Outlet, NavLink, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard, Users, Building2, TrendingUp,
@@ -50,6 +51,18 @@ const getNavItems = (role) => {
 export default function Layout() {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowMenu(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const navItems = getNavItems(user?.role || 'User');
 
@@ -150,7 +163,7 @@ export default function Layout() {
               <span className="nav-badge-dot" />
             </button>
 
-            <div className="user-profile-menu" onClick={logout} title="Click to logout">
+            <div className="user-profile-menu" onClick={() => setShowMenu(!showMenu)} ref={menuRef} style={{ position: 'relative' }}>
               <div className="avatar avatar-sm" style={{ background: roleColor }}>
                 {getInitials(user?.fullName)}
               </div>
@@ -159,6 +172,32 @@ export default function Layout() {
                 <div style={{ fontSize: '0.6875rem', color: '#64748b' }}>{user?.role}</div>
               </div>
               <ChevronDown size={14} color="#94a3b8" />
+              
+              {showMenu && (
+                <div className="profile-dropdown-menu" style={{
+                  position: 'absolute', top: '100%', right: 0, marginTop: '0.5rem',
+                  background: 'white', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                  border: '1px solid #e2e8f0', minWidth: '220px', zIndex: 100, overflow: 'hidden'
+                }}>
+                  <div style={{ padding: '1rem', borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
+                    <div style={{ fontWeight: 600, color: '#0f172a' }}>{user?.fullName}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{user?.email}</div>
+                  </div>
+                  <div style={{ padding: '0.5rem' }}>
+                    <Link to="/settings" className="dropdown-item" onClick={() => setShowMenu(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', color: '#334155', textDecoration: 'none', borderRadius: '6px', fontSize: '0.875rem' }}>
+                      <UserCog size={16} color="#64748b" /> Profile & Settings
+                    </Link>
+                    <Link to="/tasks" className="dropdown-item" onClick={() => setShowMenu(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', color: '#334155', textDecoration: 'none', borderRadius: '6px', fontSize: '0.875rem' }}>
+                      <CheckSquare size={16} color="#64748b" /> My Tasks
+                    </Link>
+                  </div>
+                  <div style={{ padding: '0.5rem', borderTop: '1px solid #e2e8f0' }}>
+                    <button onClick={logout} className="dropdown-item" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', color: '#ef4444', textDecoration: 'none', borderRadius: '6px', fontSize: '0.875rem', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
+                      <LogOut size={16} /> Logout
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </header>
