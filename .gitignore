@@ -69,3 +69,8 @@ yarn-error.log*
 *.userosscache
 *.sln.docstates
 
+
+# Ignore appsettings to protect secrets
+appsettings.json
+appsettings.Development.json
+appsettings.*.json
