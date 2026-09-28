@@ -6,6 +6,7 @@ using CRM.Core.DTOs;
 using CRM.Core.Entities;
 using CRM.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 
 namespace CRM.API.Controllers;
@@ -16,11 +17,15 @@ public class AuthController : ControllerBase
 {
     private readonly IUserRepository _userRepo;
     private readonly IConfiguration _config;
+    private readonly IMemoryCache _cache;
+    private readonly IEmailService _emailService;
 
-    public AuthController(IUserRepository userRepo, IConfiguration config)
+    public AuthController(IUserRepository userRepo, IConfiguration config, IMemoryCache cache, IEmailService emailService)
     {
         _userRepo = userRepo;
         _config = config;
+        _cache = cache;
+        _emailService = emailService;
     }
 
     [HttpPost("login")]
@@ -61,6 +66,81 @@ public class AuthController : ControllerBase
         var userDto = MapToDto(user);
 
         return CreatedAtAction(nameof(Login), new AuthResponseDto(token, userDto));
+    }
+
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
+    {
+        var user = await _userRepo.GetByEmailAsync(dto.Email);
+        if (user == null)
+            return Ok(new { message = "If the email exists, an OTP will be sent." });
+
+        // Generate 6-digit OTP
+        var otp = new Random().Next(100000, 999999).ToString();
+        
+        // Store in cache for 15 minutes
+        _cache.Set($"OTP_{dto.Email.ToLower()}", otp, TimeSpan.FromMinutes(15));
+
+        try
+        {
+            var content = $@"
+                <p>You requested a password reset for your Smart CRM account.</p>
+                <p>Your one-time password (OTP) is:</p>
+                <h2 style='background: #e2e8f0; padding: 10px; text-align: center; border-radius: 8px; letter-spacing: 4px;'>{otp}</h2>
+                <p style='color: #64748b; font-size: 14px;'>This code will expire in 15 minutes.</p>
+            ";
+            var emailHtml = CRM.Core.Helpers.EmailTemplateBuilder.BuildClientReminderEmail(user.FullName, "Smart CRM Security", content);
+            await _emailService.SendEmailAsync(user.Email, "Password Reset OTP", emailHtml);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to send OTP email: {ex.Message}");
+        }
+
+        return Ok(new { message = "If the email exists, an OTP will be sent." });
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+    {
+        if (!_cache.TryGetValue($"OTP_{dto.Email.ToLower()}", out string? storedOtp) || storedOtp != dto.Otp)
+            return BadRequest(new { message = "Invalid or expired OTP." });
+
+        var user = await _userRepo.GetByEmailAsync(dto.Email);
+        if (user == null)
+            return BadRequest(new { message = "User not found." });
+
+        user.PasswordHash = HashPassword(dto.NewPassword);
+        await _userRepo.UpdateAsync(user);
+
+        _cache.Remove($"OTP_{dto.Email.ToLower()}");
+
+        return Ok(new { message = "Password has been successfully reset." });
+    }
+
+    [HttpPost("change-password")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+        var user = await _userRepo.GetByIdAsync(userId);
+        
+        if (user == null)
+            return Unauthorized();
+
+        if (!VerifyPassword(dto.CurrentPassword, user.PasswordHash))
+            return BadRequest(new { message = "Invalid current password." });
+
+        user.PasswordHash = HashPassword(dto.NewPassword);
+        user.RequiresPasswordChange = false; // They successfully changed it
+        
+        await _userRepo.UpdateAsync(user);
+
+        // Return a fresh token just in case
+        var token = GenerateJwtToken(user);
+        var userDto = MapToDto(user);
+        
+        return Ok(new AuthResponseDto(token, userDto));
     }
 
     private string GenerateJwtToken(User user)
@@ -137,5 +217,9 @@ public class AuthController : ControllerBase
 
     private static UserDto MapToDto(User user) => new(
         user.Id, user.FullName, user.Email, user.Role,
-        user.Avatar, user.Phone, user.Department, user.IsActive);
+        user.Avatar, user.Phone, user.Department, user.IsActive, user.RequiresPasswordChange);
 }
+
+public record ForgotPasswordDto(string Email);
+public record ResetPasswordDto(string Email, string Otp, string NewPassword);
+public record ChangePasswordDto(string CurrentPassword, string NewPassword);

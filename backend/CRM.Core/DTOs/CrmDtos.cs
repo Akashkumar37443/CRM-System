@@ -6,7 +6,7 @@ public record RegisterDto(string FullName, string Email, string Password, string
 public record AuthResponseDto(string Token, UserDto User);
 
 // ============ User DTOs ============
-public record UserDto(int Id, string FullName, string Email, string Role, string? Avatar, string? Phone, string? Department, bool IsActive);
+public record UserDto(int Id, string FullName, string Email, string Role, string? Avatar, string? Phone, string? Department, bool IsActive, bool RequiresPasswordChange);
 
 // ============ Contact DTOs ============
 public record ContactDto(

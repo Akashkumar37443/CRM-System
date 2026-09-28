@@ -22,7 +22,7 @@ export default function AdminPanel() {
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('All');
   const [showInvite, setShowInvite] = useState(false);
-  const [inviteForm, setInviteForm] = useState({ fullName: '', email: '', password: '', phone: '', role: 'User' });
+  const [inviteForm, setInviteForm] = useState({ fullName: '', email: '', phone: '', role: 'User' });
   const [saving, setSaving] = useState(false);
   const [actionMenu, setActionMenu] = useState(null); // userId with open menu
   const [confirmDelete, setConfirmDelete] = useState(null);
@@ -50,19 +50,16 @@ export default function AdminPanel() {
     e.preventDefault();
     setSaving(true);
     try {
-      // Register via auth endpoint, then update role if not 'User'
-      const res = await authApi.register({
+      // Call the new Admin Create User endpoint which automatically sends the welcome email
+      await usersApi.create({
         fullName: inviteForm.fullName,
         email: inviteForm.email,
-        password: inviteForm.password,
         phone: inviteForm.phone || null,
+        role: inviteForm.role,
+        department: 'Sales' // Default department, can be added to form later
       });
-      // If role is not User, update role
-      if (inviteForm.role !== 'User' && res.data?.user?.id) {
-        await usersApi.updateRole(res.data.user.id, inviteForm.role);
-      }
       setShowInvite(false);
-      setInviteForm({ fullName: '', email: '', password: '', phone: '', role: 'User' });
+      setInviteForm({ fullName: '', email: '', phone: '', role: 'User' });
       loadUsers();
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to create user');
@@ -182,8 +179,6 @@ export default function AdminPanel() {
               value={inviteForm.fullName} onChange={e => setInviteForm(p => ({ ...p, fullName: e.target.value }))} />
             <input style={inputStyle} placeholder="Email *" type="email" required
               value={inviteForm.email} onChange={e => setInviteForm(p => ({ ...p, email: e.target.value }))} />
-            <input style={inputStyle} placeholder="Password *" type="password" required minLength={6}
-              value={inviteForm.password} onChange={e => setInviteForm(p => ({ ...p, password: e.target.value }))} />
             <input style={inputStyle} placeholder="Phone"
               value={inviteForm.phone} onChange={e => setInviteForm(p => ({ ...p, phone: e.target.value }))} />
             <select style={inputStyle} value={inviteForm.role}

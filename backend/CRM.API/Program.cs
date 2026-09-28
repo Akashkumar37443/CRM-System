@@ -34,6 +34,9 @@ else
     builder.Services.AddDbContext<CrmDbContext>(options => options.UseSqlServer(connectionString));
 }
 
+// ============ Services & Cache ============
+builder.Services.AddMemoryCache();
+
 // ============ Repositories ============
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IContactRepository, ContactRepository>();

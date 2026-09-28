@@ -12,6 +12,7 @@ public class User
     public string? Department { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public bool IsActive { get; set; } = true;
+    public bool RequiresPasswordChange { get; set; } = false;
 
     // Navigation properties
     public ICollection<Contact> OwnedContacts { get; set; } = new List<Contact>();

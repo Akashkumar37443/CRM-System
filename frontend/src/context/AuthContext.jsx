@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { authApi } from '../services/api';
+import { authApi, usersApi } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -40,8 +40,20 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  const checkAuth = async () => {
+    try {
+      const res = await usersApi.getMe();
+      if (res.data) {
+        localStorage.setItem('crm_user', JSON.stringify(res.data));
+        setUser(res.data);
+      }
+    } catch (err) {
+      console.error("Failed to check auth:", err);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, checkAuth }}>
       {children}
     </AuthContext.Provider>
   );

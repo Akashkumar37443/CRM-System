@@ -77,7 +77,8 @@ public class UsersController : ControllerBase
             Phone = dto.Phone,
             Department = dto.Department,
             Role = dto.Role ?? "User",
-            IsActive = true
+            IsActive = true,
+            RequiresPasswordChange = true
         };
 
         await _userRepo.AddAsync(user);
@@ -141,7 +142,7 @@ public class UsersController : ControllerBase
     }
 
     private static UserDto MapToDto(User u) =>
-        new(u.Id, u.FullName, u.Email, u.Role, u.Avatar, u.Phone, u.Department, u.IsActive);
+        new(u.Id, u.FullName, u.Email, u.Role, u.Avatar, u.Phone, u.Department, u.IsActive, u.RequiresPasswordChange);
 }
 
 public record UpdateRoleDto(string Role);

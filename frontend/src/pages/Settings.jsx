@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { User, Shield, Bell, Palette, Save, Check } from 'lucide-react';
+import { User, Shield, Bell, Palette, Save, Check, Eye, EyeOff } from 'lucide-react';
 
 export default function Settings() {
   const { user } = useAuth();
   const [tab, setTab] = useState('profile');
   const [saved, setSaved] = useState(false);
   const [theme, setTheme] = useState(localStorage.getItem('crm_theme') || 'light');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [profile, setProfile] = useState({
     fullName: user?.fullName || '',
@@ -188,16 +191,31 @@ export default function Settings() {
             <div className="settings-section-body">
               <div className="form-group">
                 <label className="form-label">Current Password</label>
-                <input type="password" className="form-input" placeholder="Enter current password" />
+                <div style={{ position: 'relative' }}>
+                  <input type={showCurrentPassword ? "text" : "password"} className="form-input" placeholder="Enter current password" style={{ paddingRight: '2.5rem' }} />
+                  <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} style={{ position: 'absolute', right: '0.875rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: 0 }}>
+                    {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
               <div className="settings-row">
                 <div className="form-group">
                   <label className="form-label">New Password</label>
-                  <input type="password" className="form-input" placeholder="Enter new password" />
+                  <div style={{ position: 'relative' }}>
+                    <input type={showNewPassword ? "text" : "password"} className="form-input" placeholder="Enter new password" style={{ paddingRight: '2.5rem' }} />
+                    <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} style={{ position: 'absolute', right: '0.875rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: 0 }}>
+                      {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
                 </div>
                 <div className="form-group">
                   <label className="form-label">Confirm New Password</label>
-                  <input type="password" className="form-input" placeholder="Confirm new password" />
+                  <div style={{ position: 'relative' }}>
+                    <input type={showConfirmPassword ? "text" : "password"} className="form-input" placeholder="Confirm new password" style={{ paddingRight: '2.5rem' }} />
+                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} style={{ position: 'absolute', right: '0.875rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: 0 }}>
+                      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
                 </div>
               </div>
               <div style={{ marginTop: '1rem', padding: '1.25rem', background: 'rgba(255, 255, 255, 0.04)', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.12)', backdropFilter: 'blur(10px)' }}>

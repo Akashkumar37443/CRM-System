@@ -33,6 +33,9 @@ api.interceptors.response.use(
 export const authApi = {
   login: (data) => api.post('/auth/login', data),
   register: (data) => api.post('/auth/register', data),
+  forgotPassword: (data) => api.post('/auth/forgot-password', data),
+  resetPassword: (data) => api.post('/auth/reset-password', data),
+  changePassword: (data) => api.post('/auth/change-password', data),
 };
 
 // Contacts
@@ -43,6 +46,7 @@ export const contactsApi = {
   create: (data) => api.post('/contacts', data),
   update: (id, data) => api.put(`/contacts/${id}`, data),
   delete: (id) => api.delete(`/contacts/${id}`),
+  sendEmail: (id, data) => api.post(`/contacts/${id}/send-email`, data),
 };
 
 // Companies
@@ -106,6 +110,7 @@ export const activitiesApi = {
 export const usersApi = {
   getAll: () => api.get('/users'),
   getMe: () => api.get('/users/me'),
+  create: (data) => api.post('/users', data),
   updateRole: (id, role) => api.put(`/users/${id}/role`, { role }),
   updateStatus: (id, isActive) => api.put(`/users/${id}/status`, { isActive }),
   delete: (id) => api.delete(`/users/${id}`),
